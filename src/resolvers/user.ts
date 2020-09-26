@@ -31,11 +31,30 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
-  @Mutation(() => User)
+  @Mutation(() => UserResponse)
   async register(
     @Arg("options") options: UsernamePasswordInput,
     @Ctx() { em }: MyContext
-  ) {
+  ): Promise<UserResponse> {
+    if (options.username.length < 3) {
+      return {
+        errors: [{
+          field: 'Username',
+          message: 'Your username must be at least 3 characters long'
+        }]
+      }
+    }
+
+
+    if (options.password.length < 6) {
+      return {
+        errors: [{
+          field: 'password',
+          message: 'Your password must be at least 6 characters long'
+        }]
+      }
+    }
+
     const hashedPassword = await argon2.hash(options.password)
 
     const user = em.create(User, {
