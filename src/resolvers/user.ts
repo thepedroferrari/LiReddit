@@ -22,7 +22,7 @@ class FieldError {
 
 @ObjectType()
 class UserResponse {
-  @Field(() => FieldError, {nullable: true})
+  @Field(() => [FieldError], {nullable: true})
   errors?: FieldError[]
 
   @Field(() => User, {nullable: true})
@@ -52,9 +52,7 @@ export class UserResolver {
     @Arg("options") options: UsernamePasswordInput,
     @Ctx() { em }: MyContext
   ): Promise<UserResponse> {
-    const user = await em.findOne(User, {
-      username: options.username,
-    })
+    const user = await em.findOne(User, { username: options.username })
     if (!user) {
       return {
         errors: [{
@@ -68,8 +66,8 @@ export class UserResolver {
     if (!validPwd) {
       return {
         errors: [{
-          field: "password",
-          message: "Incorrect Password"
+          field: 'password',
+          message: 'Incorrect Password'
         }]
       }
     }
