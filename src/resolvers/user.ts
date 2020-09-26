@@ -3,6 +3,7 @@ import argon2 from 'argon2';
 
 import { MyContext } from '../types';
 import { User } from '../entities/User';
+import { ERROR_CODE } from '../constants';
 
 @InputType()
 class UsernamePasswordInput {
@@ -62,8 +63,22 @@ export class UserResolver {
       password: hashedPassword
     });
 
-    await em.persistAndFlush(user);
-    return user;
+
+    try {
+      await em.persistAndFlush(user);
+    } catch (err) {
+      if (err.code = ERROR_CODE.USER_EXIST) {
+        return {
+          errors: [{
+            field: 'username',
+            message: 'This username has already been taken.'
+          }]
+        }
+      }
+    }
+    return {
+      user
+    };
   }
 
   @Mutation(() => UserResponse)
