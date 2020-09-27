@@ -12,6 +12,7 @@ import { buildSchema } from 'type-graphql';
 import { HelloResolver } from './resolvers/hello';
 import { PostResolver } from './resolvers/post';
 import { UserResolver } from './resolvers/user';
+import { MyContext } from './types';
 
 
 
@@ -31,8 +32,15 @@ const main = async () => {
         client: redisClient,
         disableTouch: true
       }),
-      secret: 'AIUEHHUIAESRHOUIAEHOUIEHiuaehoiaeUhAEHGFSUIOGHASDIUHDSIUHAOISUEH',
-      resave: false,
+      cookie: {
+        maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: __prod__
+      },
+      saveUninitialized: true,
+      secret: 'AIUEHHUIAESRHOUIAEHOUIEH',
+      resave: true,
     })
   )
 
@@ -41,7 +49,7 @@ const main = async () => {
       resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false
     }),
-    context: () => ({ em: orm.em})
+    context: ({ req, res }): MyContext => ({ em: orm.em, req, res })
   });
 
   apolloServer.applyMiddleware({ app });
