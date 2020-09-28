@@ -39,7 +39,7 @@ const main = async () => {
         secure: __prod__
       },
       saveUninitialized: false,
-      secret: 'AIUEHHUIAESRHOUIAEHOUIE',
+      secret: 'isuadhoisdhaoiuadshoiudash',
       resave: false,
     })
   )

@@ -23,12 +23,13 @@ class FieldError {
 
 @ObjectType()
 class UserResponse {
-  @Field(() => [FieldError], {nullable: true})
+  @Field(() => [FieldError], { nullable: true })
   errors?: FieldError[]
 
-  @Field(() => User, {nullable: true})
+  @Field(() => User, { nullable: true })
   user?: User
 }
+
 
 @Resolver()
 export class UserResolver {
@@ -105,8 +106,15 @@ export class UserResolver {
         }]
       }
     }
-
+    console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+    console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+    console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+    console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+    console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+    console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
+    console.log(req.session)
     req.session!.userId = user.id
+    console.log(req.session!.userId)
 
     return {
       user
