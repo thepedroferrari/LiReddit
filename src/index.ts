@@ -6,7 +6,7 @@ import { MikroORM } from '@mikro-orm/core';
 import redis from 'redis';
 import 'reflect-metadata';
 
-import { __prod__ } from './constants';
+import { __prod__, COOKIE_NAME } from './constants';
 import microConfig from './mikro-orm.config';
 import { buildSchema } from 'type-graphql';
 import { HelloResolver } from './resolvers/hello';
@@ -27,16 +27,16 @@ const main = async () => {
 
   app.use(
     session({
-      name: 'qid',
+      name: COOKIE_NAME,
       store: new RedisStore({
         client: redisClient,
         disableTouch: true
       }),
       cookie: {
-        maxAge: 1000000, // * 60 * 60 * 24 * 365 * 10,
+        maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
         httpOnly: true,
         sameSite: 'lax',
-        secure: false // __prod__
+        secure: __prod__
       },
       saveUninitialized: false,
       secret: 'isuadhoisdhaoiuadshoiudash',
