@@ -38,11 +38,11 @@ export class UserResolver {
       @Ctx() {req, em}:MyContext
   ) {
     // you are not logged in
-    if (!req.session!.userId) {
+    if (!req.session.userId) {
       return null
     }
 
-    const user = await em.findOne(User, { id: req.session!.userId })
+    const user = await em.findOne(User, { id: req.session.userId })
     return user;
   }
 
@@ -92,7 +92,7 @@ export class UserResolver {
     }
 
     // login the user
-    req.session!.userId = user.id;
+    req.session.userId = user.id;
 
     return {
       user
@@ -124,7 +124,7 @@ export class UserResolver {
       }
     }
 
-    req.session!.userId = user.id;
+    req.session.userId = user.id;
 
     return {
       user
