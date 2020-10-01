@@ -54,7 +54,7 @@ export class UserResolver {
     if (options.username.length < 3) {
       return {
         errors: [{
-          field: 'Username',
+          field: 'username',
           message: 'Your username must be at least 3 characters long'
         }]
       }
