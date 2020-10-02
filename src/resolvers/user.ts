@@ -79,6 +79,26 @@ export class UserResolver {
 
 
     try {
+      /*
+        # ALTERNATIVE METHOD: Writing directly to SQL
+
+        import {EntityManager} from '@mikro-orm/postgresql'
+        let user;
+
+        try {
+          const result = await (em as EntityManager)
+            .createQueryBuilder(User)
+            .getKnexQuery()
+            .insert({
+              username: options.username,
+              password: hashedPassword,
+              created_at: new Date(),
+              updated_at: new Date(),
+            })
+            .returning("*")
+
+        user = result[0];
+      */
       await em.persistAndFlush(user);
     } catch (err) {
       if (err.code = ERROR_CODE.USER_EXIST) {
