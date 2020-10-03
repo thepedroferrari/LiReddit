@@ -35,7 +35,7 @@ class UserResponse {
 export class UserResolver {
   @Query(() => User, { nullable: true })
   async me(
-      @Ctx() {req, em}:MyContext
+    @Ctx() { req, em }: MyContext
   ) {
     // you are not logged in
     if (!req.session.userId) {
@@ -149,5 +149,22 @@ export class UserResolver {
     return {
       user
     };
+  }
+
+  @Mutation(() => Boolean)
+  logout(
+    @Ctx() { req }: MyContext
+  ) {
+    return new Promise(res => {
+      req.session.destroy(err => {
+        if (err) {
+          console.log(err);
+          res(false);
+          return;
+        }
+        res(true);
+      })
+
+    })
   }
 }
