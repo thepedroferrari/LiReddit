@@ -4,9 +4,12 @@ import argon2 from 'argon2';
 import { MyContext } from '../types';
 import { User } from '../entities/User';
 import { ERROR_CODE } from '../constants';
+import { isValidEmail } from "src/utils/isValidEmail";
 
 @InputType()
 class UsernamePasswordInput {
+  @Field()
+  email: string;
   @Field()
   username: string;
   @Field()
@@ -20,7 +23,6 @@ class FieldError {
   @Field()
   message: string;
 }
-
 @ObjectType()
 class UserResponse {
   @Field(() => [FieldError], { nullable: true })
@@ -60,6 +62,14 @@ export class UserResolver {
     @Arg("options") options: UsernamePasswordInput,
     @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
+    if (!isValidEmail(options.email)) {
+      return {
+        errors: [{
+          field: 'email',
+          message: 'Please input a valid email address.'
+        }]
+      }
+    }
     if (options.username.length < 3) {
       return {
         errors: [{
