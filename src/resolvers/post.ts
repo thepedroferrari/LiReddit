@@ -5,8 +5,9 @@ import { MyContext } from '../types';
 @Resolver()
 export class PostResolver {
   @Query(() => [Post])
-  posts(
-    @Ctx() {em}: MyContext
+
+  async posts(
+    @Ctx() { em }: MyContext
   ): Promise<Post[]> {
     return em.find(Post, {})
   }
@@ -29,7 +30,7 @@ export class PostResolver {
     return post
   }
 
-  @Mutation(() => Post, {nullable: true})
+  @Mutation(() => Post, { nullable: true })
   async updatePost(
     @Arg('id') id: number,
     @Arg('title') title: string,
@@ -55,7 +56,7 @@ export class PostResolver {
     @Ctx() { em }: MyContext
   ): Promise<boolean> {
     try {
-      await em.nativeDelete(Post, {id})
+      await em.nativeDelete(Post, { id })
     } catch {
       return false;
     }
