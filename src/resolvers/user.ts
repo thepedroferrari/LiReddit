@@ -1,11 +1,11 @@
-import { Arg, Ctx, Field, Mutation, ObjectType, Query, Resolver } from "type-graphql";
 import argon2 from 'argon2';
+import { Arg, Ctx, Field, Mutation, ObjectType, Query, Resolver } from "type-graphql";
 
-import { MyContext } from '../types';
-import { User } from '../entities/User';
 import { ERROR_CODE } from '../constants';
+import { User } from '../entities/User';
+import { MyContext } from '../types';
+import { validateRegister } from "../utils/validateRegister";
 import { UsernamePasswordInput } from "./UsernamePasswordInput";
-import { validateRegister } from "src/utils/validateRegister";
 
 @ObjectType()
 class FieldError {
@@ -32,6 +32,7 @@ export class UserResolver {
     @Ctx() { em }: MyContext
   ) {
     const user = await em.findOne(User, { email });
+    console.log('user: ', user)
     return true
   }
 
