@@ -117,14 +117,14 @@ export class UserResolver {
     const user = await em.findOne(
       User,
       usernameOrEmail.includes('@')
-        ? { username: usernameOrEmail }
-        : { password: usernameOrEmail }
+        ? { email: usernameOrEmail }
+        : { username: usernameOrEmail }
     );
 
     if (!user) {
       return {
         errors: [{
-          field: 'username',
+          field: 'usernameOrEmail',
           message: 'That username does not exist'
         }]
       }
