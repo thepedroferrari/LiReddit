@@ -1,7 +1,7 @@
 import { isValidEmail } from "./isValidEmail"
 import { UsernamePasswordInput } from '../resolvers/UsernamePasswordInput';
 
-const returnErrors = (field: string, message: string) => [{ field, message }]
+export const returnErrors = (field: string, message: string) => [{ field, message }]
 
 export const validateRegister = (options: UsernamePasswordInput) => {
   if (!isValidEmail(options.email)) return returnErrors('email', 'Invalid Email');

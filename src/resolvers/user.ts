@@ -1,12 +1,12 @@
 import argon2 from 'argon2';
-import { sendEmail } from 'src/utils/sendEmail';
 import { Arg, Ctx, Field, Mutation, ObjectType, Query, Resolver } from "type-graphql";
 import { v4 } from 'uuid';
 
 import { ERROR_CODE, FORGET_PASSWORD_PREFIX, ONE_DAY } from '../constants';
 import { User } from '../entities/User';
 import { MyContext } from '../types';
-import { validateRegister } from "../utils/validateRegister";
+import { sendEmail } from '../utils/sendEmail';
+import { validateRegister, returnErrors } from '../utils/validateRegister';
 import { UsernamePasswordInput } from "./UsernamePasswordInput";
 
 @ObjectType()
@@ -28,6 +28,34 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
+  @Mutation(() => UserResponse)
+  async changePassword(
+    @Arg('token') token: string,
+    @Arg('newPassword') newPassword: string,
+    @Ctx() { redis, em }: MyContext
+  ): Promise<UserResponse> {
+    if (newPassword.length <= 6) {
+      return { errors: returnErrors('newPassword', 'Your password must be at least 6 characters long') };
+    }
+
+    const userId = await redis.get(FORGET_PASSWORD_PREFIX + token);
+
+    if (!userId) return {
+      errors: returnErrors('token', 'Token expired')
+    }
+
+    const user = await em.findOne(User, { id: Number(userId) })
+    if (!user) return {
+      errors: returnErrors('token', 'User no longer exists')
+    }
+
+    user.password = await argon2.hash(newPassword);
+    // it automatically updates the updatedAt field
+    await em.persistAndFlush(user);
+
+    return { user };
+  }
+
   @Mutation(() => Boolean)
   async forgotPassword(
     @Arg('email') email: string,
