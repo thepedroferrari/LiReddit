@@ -38,7 +38,8 @@ export class UserResolver {
       return { errors: returnErrors('newPassword', 'Your password must be at least 6 characters long') };
     }
 
-    const userId = await redis.get(FORGET_PASSWORD_PREFIX + token);
+    const key = FORGET_PASSWORD_PREFIX + token;
+    const userId = await redis.get(key);
 
     if (!userId) return {
       errors: returnErrors('token', 'Token expired')
@@ -55,6 +56,8 @@ export class UserResolver {
 
     // log in user afterwards
     req.session.userId = user.id;
+
+    redis.del(key);
 
     return { user };
   }
