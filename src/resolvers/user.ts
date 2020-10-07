@@ -32,7 +32,7 @@ export class UserResolver {
   async changePassword(
     @Arg('token') token: string,
     @Arg('newPassword') newPassword: string,
-    @Ctx() { redis, em }: MyContext
+    @Ctx() { redis, em, req }: MyContext
   ): Promise<UserResponse> {
     if (newPassword.length <= 6) {
       return { errors: returnErrors('newPassword', 'Your password must be at least 6 characters long') };
@@ -52,6 +52,9 @@ export class UserResolver {
     user.password = await argon2.hash(newPassword);
     // it automatically updates the updatedAt field
     await em.persistAndFlush(user);
+
+    // log in user afterwards
+    req.session.userId = user.id;
 
     return { user };
   }
