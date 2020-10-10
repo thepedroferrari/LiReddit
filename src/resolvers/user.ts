@@ -1,5 +1,6 @@
 import argon2 from 'argon2';
 import { Arg, Ctx, Field, Mutation, ObjectType, Query, Resolver } from "type-graphql";
+import { getConnection } from 'typeorm';
 import { v4 } from 'uuid';
 
 import { ERROR_CODE, FORGET_PASSWORD_PREFIX, ONE_DAY } from '../constants';
@@ -32,7 +33,7 @@ export class UserResolver {
   async changePassword(
     @Arg('token') token: string,
     @Arg('newPassword') newPassword: string,
-    @Ctx() { redis, em, req }: MyContext
+    @Ctx() { redis, req }: MyContext
   ): Promise<UserResponse> {
     if (newPassword.length < 6) {
       return { errors: returnErrors('newPassword', 'Your password must be at least 6 characters long') };
@@ -45,14 +46,19 @@ export class UserResolver {
       errors: returnErrors('token', 'Token expired')
     }
 
-    const user = await em.findOne(User, { id: Number(userId) })
+    const userIdNum = parseInt(userId);
+    const user = await User.findOne(userIdNum)
+
     if (!user) return {
       errors: returnErrors('token', 'User no longer exists')
     }
 
-    user.password = await argon2.hash(newPassword);
-    // it automatically updates the updatedAt field
-    await em.persistAndFlush(user);
+    await User.update(
+      { id: userIdNum },
+      {
+        password: await argon2.hash(newPassword)
+      }
+    )
 
     // log in user afterwards
     req.session.userId = user.id;
@@ -65,9 +71,10 @@ export class UserResolver {
   @Mutation(() => Boolean)
   async forgotPassword(
     @Arg('email') email: string,
-    @Ctx() { em, redis }: MyContext
+    @Ctx() { redis }: MyContext
   ) {
-    const user = await em.findOne(User, { email });
+    // If you are going to search by a column that is not the primary key, you have to pass "Where"
+    const user = await User.findOne({ where: { email } })
     if (!user) {
       // email is not in the db
       return true
@@ -89,58 +96,41 @@ export class UserResolver {
   }
 
   @Query(() => User, { nullable: true })
-  async me(
-    @Ctx() { req, em }: MyContext
+  me(
+    @Ctx() { req }: MyContext
   ) {
     // you are not logged in
-    if (!req.session.userId) {
-      return null
-    }
-
-    const user = await em.findOne(User, { id: req.session.userId })
-    return user;
+    return req.session.userId
+      ? User.findOne(req.session.userId)
+      : null;
   }
 
   @Mutation(() => UserResponse)
   async register(
     @Arg("options") options: UsernamePasswordInput,
-    @Ctx() { em, req }: MyContext
+    @Ctx() { req }: MyContext
   ): Promise<UserResponse> {
     const errors = validateRegister(options);
     if (errors) return { errors };
 
     const hashedPassword = await argon2.hash(options.password)
 
-    const user = em.create(User, {
-      email: options.email,
-      username: options.username,
-      password: hashedPassword
-    });
-
+    let user;
 
     try {
-      /*
-        # ALTERNATIVE METHOD: Writing directly to SQL
+      await getConnection()
+        .createQueryBuilder()
+        .insert()
+        .into(User)
+        .values([
+          {
+            username: options.username,
+            email: options.email,
+            password: hashedPassword
+          }
+        ])
+        .execute();
 
-        import {EntityManager} from '@mikro-orm/postgresql'
-        let user;
-
-        try {
-          const result = await (em as EntityManager)
-            .createQueryBuilder(User)
-            .getKnexQuery()
-            .insert({
-              username: options.username,
-              email: options.email,
-              password: hashedPassword,
-              created_at: new Date(),
-              updated_at: new Date(),
-            })
-            .returning("*")
-
-        user = result[0];
-      */
-      await em.persistAndFlush(user);
     } catch (err) {
       if (err.code = ERROR_CODE.USER_EXIST) {
         return {
