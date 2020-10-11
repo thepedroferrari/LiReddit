@@ -19,6 +19,8 @@ const main = async () => {
   const conn = await createConnection({
     type: 'postgres',
     database: 'lireddit5',
+    username: 'postgres',
+    password: 'postgres',
     logging: true,
     synchronize: true,
     entities: [Post, User]

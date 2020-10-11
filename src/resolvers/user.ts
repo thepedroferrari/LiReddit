@@ -118,7 +118,7 @@ export class UserResolver {
     let user;
 
     try {
-      await getConnection()
+      const result = await getConnection()
         .createQueryBuilder()
         .insert()
         .into(User)
@@ -129,8 +129,9 @@ export class UserResolver {
             password: hashedPassword
           }
         ])
+        .returning('*')
         .execute();
-
+      user = result.raw[0];
     } catch (err) {
       if (err.code = ERROR_CODE.USER_EXIST) {
         return {
@@ -154,13 +155,12 @@ export class UserResolver {
   async login(
     @Arg("usernameOrEmail") usernameOrEmail: string,
     @Arg("password") password: string,
-    @Ctx() { em, req }: MyContext
+    @Ctx() { req }: MyContext
   ): Promise<UserResponse> {
-    const user = await em.findOne(
-      User,
+    const user = await User.findOne(
       usernameOrEmail.includes('@')
-        ? { email: usernameOrEmail }
-        : { username: usernameOrEmail }
+        ? { where: { email: usernameOrEmail } }
+        : { where: { username: usernameOrEmail } }
     );
 
     if (!user) {
