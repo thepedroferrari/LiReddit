@@ -118,6 +118,15 @@ export class UserResolver {
     let user;
 
     try {
+      /* Same thing as:
+        User.create(
+          {
+            username: options.username,
+            email: options.email,
+            password: hashedPassword
+          }
+        ).save()
+      */
       const result = await getConnection()
         .createQueryBuilder()
         .insert()
