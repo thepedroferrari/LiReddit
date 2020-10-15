@@ -29,7 +29,9 @@ export class PostResolver {
       .take(realLimit)
 
     if (cursor) {
-      qb.where('"createdAt" < :cursor', { cursor: new Date(cursor) })
+      qb.where('"createdAt" < :cursor',
+        { cursor: new Date(cursor) }
+      )
     }
 
     return qb.getMany()
