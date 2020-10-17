@@ -13,12 +13,10 @@ class PostInput {
   text: string
 }
 
-@Resolver()
+@Resolver(_ => Post)
 export class PostResolver {
   @FieldResolver(() => String)
-  excerpt(
-    @Root() root: Post
-  ) {
+  excerpt(@Root() root: Post) {
     return root.text.slice(0, 175)
   }
 
