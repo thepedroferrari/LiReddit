@@ -13,7 +13,7 @@ class PostInput {
   text: string
 }
 
-@Resolver(_ => Post)
+@Resolver(Post)
 export class PostResolver {
   @FieldResolver(() => String)
   excerpt(@Root() root: Post) {
