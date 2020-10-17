@@ -1,5 +1,5 @@
 import { isAuth } from '../middlewares/isAuth';
-import { Arg, Field, InputType, Mutation, Query, Resolver, Ctx, UseMiddleware, Float, Int } from 'type-graphql';
+import { Arg, Field, InputType, Mutation, Query, Resolver, Ctx, UseMiddleware, Float, Int, FieldResolver, Root } from 'type-graphql';
 import { Post } from '../entities/Post';
 import { MyContext } from '../types';
 import { getConnection } from 'typeorm';
@@ -15,6 +15,13 @@ class PostInput {
 
 @Resolver()
 export class PostResolver {
+  @FieldResolver(() => String)
+  excerpt(
+    @Root() root: Post
+  ) {
+    return root.text.slice(0, 175)
+  }
+
   @Query(() => [Post])
 
   async posts(
