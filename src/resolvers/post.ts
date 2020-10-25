@@ -1,8 +1,22 @@
-import { isAuth } from '../middlewares/isAuth';
-import { Arg, Field, InputType, Mutation, Query, Resolver, Ctx, UseMiddleware, Int, FieldResolver, Root, ObjectType } from 'type-graphql';
-import { Post } from '../entities/Post';
-import { MyContext } from '../types';
+import {
+  Arg,
+  Ctx,
+  Field,
+  FieldResolver,
+  InputType,
+  Int,
+  Mutation,
+  ObjectType,
+  Query,
+  Resolver,
+  Root,
+  UseMiddleware
+} from 'type-graphql';
 import { getConnection } from 'typeorm';
+
+import { Post } from '../entities/Post';
+import { isAuth } from '../middlewares/isAuth';
+import { MyContext } from '../types';
 
 @InputType()
 class PostInput {
@@ -28,8 +42,40 @@ export class PostResolver {
     return root.text.slice(0, 175)
   }
 
-  @Query(() => PaginatedPosts)
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async vote(
+    @Arg('postId', () => Int) postId: number,
+    @Arg('value', () => Int) value: number,
+    @Ctx() { req }: MyContext
+  ) {
+    const isUpdoot = value !== -1;
+    const upDoot = isUpdoot ? 1 : -1
+    const { userId } = req.session
 
+    // await Updoot.insert({
+    //   userId,
+    //   postId,
+    //   value: upDoot
+    // })
+
+    await getConnection().query(`
+      START TRANSACTION;
+
+      insert into updoot ("userId", "postId", value)
+      values(${userId}, ${postId}, ${upDoot});
+
+      update post
+      set points = points + ${upDoot}
+      where id = ${postId};
+
+      COMMIT;
+    `)
+
+    return true
+  }
+
+  @Query(() => PaginatedPosts)
   async posts(
     @Arg('limit', () => Int) limit: number,
     @Arg('cursor', () => String, { nullable: true }) cursor: string | null
@@ -40,7 +86,7 @@ export class PostResolver {
     const realLimit = Math.min(50, limit);
     const realLimitPlusOne = realLimit + 1;
 
-    const replacements: any[] = [realLimitPlusOne, ];
+    const replacements: any[] = [realLimitPlusOne];
 
     if (cursor) replacements.push(new Date(parseInt(cursor)))
 

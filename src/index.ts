@@ -14,6 +14,7 @@ import { PostResolver } from './resolvers/post';
 import { UserResolver } from './resolvers/user';
 import { Post } from './entities/Post';
 import { User } from './entities/User';
+import { Updoot } from './entities/Updoot';
 
 const main = async () => {
   const conn = await createConnection({
@@ -23,7 +24,7 @@ const main = async () => {
     password: 'postgres',
     logging: true,
     synchronize: true,
-    entities: [Post, User]
+    entities: [Post, User, Updoot]
   });
   await conn.runMigrations();
 
