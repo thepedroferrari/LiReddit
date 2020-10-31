@@ -58,13 +58,30 @@ export class PostResolver {
     // the user has voted on the post before
     // and they are changing their vote
     if (vote && vote.value !== upDoot) {
+      await getConnection().transaction(async tm => {
+        // We don't need to insert into updoot table
+        await tm.query(`
+          update updoot
+          set value = $1
+          where "postId" = $2 and "userId" = $3
+        `, [upDoot, postId, userId])
 
+        // We update the points on the post
+        await tm.query(
+          `
+          update post
+          set points = points + $1
+          where id = $2
+          `,
+          [2 * upDoot, postId]
+        )
+      })
     } else if (!vote) {
       // They haven't voted yet
       await getConnection().transaction(async tm => {
         await tm.query(`
           insert into updoot ("userId", "postId", value)
-          values($1, $2, $3);
+          values ($1, $2, $3);
         `, [userId, postId, upDoot])
         await tm.query(`
           update post
@@ -73,15 +90,6 @@ export class PostResolver {
         `, [upDoot, postId])
       })
     }
-
-    await getConnection().query(`
-      START TRANSACTION;
-
-
-      ;
-
-      COMMIT;
-    `)
 
     return true
   }
@@ -110,9 +118,10 @@ export class PostResolver {
         'createdAt', u."createdAt",
         'updatedAt', u."updatedAt"
       ) author
+      (select value from updoot where "userId" = $2 and "postId" = p.id) "voteStatus"
       from post p
       inner join public.user u on u.id = p."authorId"
-      ${cursor ? `where p."createdAt" < $2` : ''}
+      ${cursor ? `where p."createdAt" < $3` : ''}
       order by p."createdAt" DESC
       limit $1
     `, replacements)
