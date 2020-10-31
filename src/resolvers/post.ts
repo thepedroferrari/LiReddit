@@ -106,9 +106,15 @@ export class PostResolver {
     const realLimit = Math.min(50, limit);
     const realLimitPlusOne = realLimit + 1;
 
-    const replacements: any[] = [realLimitPlusOne, req.session.userId];
+    const replacements: any[] = [realLimitPlusOne];
 
-    if (cursor) replacements.push(new Date(parseInt(cursor)))
+    if (req.session.userId) replacements.push(req.session.userId)
+
+    let cursorIdx = 3;
+    if (cursor) {
+      replacements.push(new Date(parseInt(cursor)))
+      cursorIdx = replacements.length
+    }
 
     const posts = await getConnection().query(`
       select p.*,
@@ -119,13 +125,13 @@ export class PostResolver {
         'createdAt', u."createdAt",
         'updatedAt', u."updatedAt"
       ) author,
-      ${ req.session.userId
+      ${req.session.userId
         ? '(select value from updoot where "userId" = $2 and "postId" = p.id) "voteStatus"'
         : 'null as "voteStatus"'
       }
       from post p
       inner join public.user u on u.id = p."authorId"
-      ${cursor ? `where p."createdAt" < $3` : ''}
+      ${cursor ? `where p."createdAt" < $${cursorIdx}` : ''}
       order by p."createdAt" DESC
       limit $1
     `, replacements)
