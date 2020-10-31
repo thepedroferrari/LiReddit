@@ -97,7 +97,8 @@ export class PostResolver {
   @Query(() => PaginatedPosts)
   async posts(
     @Arg('limit', () => Int) limit: number,
-    @Arg('cursor', () => String, { nullable: true }) cursor: string | null
+    @Arg('cursor', () => String, { nullable: true }) cursor: string | null,
+    @Ctx() { req }: MyContext
   ): Promise<PaginatedPosts> {
     // +1 so we can check if we get back more posts than the query, meaning
     // hasMore will be true, or false if the response was less than
@@ -117,8 +118,17 @@ export class PostResolver {
         'email', u.email,
         'createdAt', u."createdAt",
         'updatedAt', u."updatedAt"
-      ) author
-      (select value from updoot where "userId" = $2 and "postId" = p.id) "voteStatus"
+      ) author,
+      ${ req.session.userId
+        ? `(
+        select value
+        from updoot
+        where "userId" = $2
+        and "postId" = p.id
+        ) "voteStatus"
+        `
+        : 'null as "voteStatus"'
+      }
       from post p
       inner join public.user u on u.id = p."authorId"
       ${cursor ? `where p."createdAt" < $3` : ''}
