@@ -106,7 +106,7 @@ export class PostResolver {
     const realLimit = Math.min(50, limit);
     const realLimitPlusOne = realLimit + 1;
 
-    const replacements: any[] = [realLimitPlusOne];
+    const replacements: any[] = [realLimitPlusOne, req.session.userId];
 
     if (cursor) replacements.push(new Date(parseInt(cursor)))
 
@@ -120,13 +120,7 @@ export class PostResolver {
         'updatedAt', u."updatedAt"
       ) author,
       ${ req.session.userId
-        ? `(
-        select value
-        from updoot
-        where "userId" = $2
-        and "postId" = p.id
-        ) "voteStatus"
-        `
+        ? '(select value from updoot where "userId" = $2 and "postId" = p.id) "voteStatus"'
         : 'null as "voteStatus"'
       }
       from post p
@@ -135,25 +129,6 @@ export class PostResolver {
       order by p."createdAt" DESC
       limit $1
     `, replacements)
-
-    // const qb = getConnection()
-    //   .getRepository(Post)
-    //   .createQueryBuilder('post')
-    //   .innerJoinAndSelect(
-    //     "post.author",
-    //     "author",
-    //     'author.id = post."authorId"'
-    //   )
-    //   .orderBy('post."createdAt"', "DESC")
-    //   .take(realLimitPlusOne)
-
-    // if (cursor) {
-    //   qb.where('post."createdAt" < :cursor',
-    //     { cursor: new Date(parseInt(cursor)) }
-    //   )
-    // }
-
-    // const posts = await qb.getMany();
 
     return {
       posts: posts.slice(0, realLimit),
