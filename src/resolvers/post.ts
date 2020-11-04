@@ -47,9 +47,24 @@ export class PostResolver {
   @FieldResolver(() => User)
   author(
     @Root() post: Post,
-    @Ctx() {userLoader}: MyContext
+    @Ctx() { userLoader }: MyContext
   ) {
     return userLoader.load(post.authorId)
+  }
+
+  @FieldResolver(() => Int, { nullable: true })
+  async voteStatus(
+    @Root() post: Post,
+    @Ctx() { updootLoader, req }: MyContext
+  ) {
+    if (!req.session.userId) return null;
+
+    const updoot = await updootLoader.load({
+      postId: post.id,
+      userId: req.session.userId
+    })
+
+    return updoot ? updoot.value : null;
   }
 
   @Mutation(() => Boolean)
@@ -106,8 +121,7 @@ export class PostResolver {
   @Query(() => PaginatedPosts)
   async posts(
     @Arg('limit', () => Int) limit: number,
-    @Arg('cursor', () => String, { nullable: true }) cursor: string | null,
-    @Ctx() { req }: MyContext
+    @Arg('cursor', () => String, { nullable: true }) cursor: string | null
   ): Promise<PaginatedPosts> {
     // +1 so we can check if we get back more posts than the query, meaning
     // hasMore will be true, or false if the response was less than
@@ -117,22 +131,12 @@ export class PostResolver {
 
     const replacements: any[] = [realLimitPlusOne];
 
-    if (req.session.userId) replacements.push(req.session.userId)
-
-    let cursorIdx = 3;
-    if (cursor) {
-      replacements.push(new Date(parseInt(cursor)))
-      cursorIdx = replacements.length
-    }
+    if (cursor) replacements.push(new Date(parseInt(cursor)));
 
     const posts = await getConnection().query(`
-      select p.*,
-      ${req.session.userId
-        ? '(select value from updoot where "userId" = $2 and "postId" = p.id) "voteStatus"'
-        : 'null as "voteStatus"'
-      }
+      select p.*
       from post p
-      ${cursor ? `where p."createdAt" < $${cursorIdx}` : ''}
+      ${cursor ? `where p."createdAt" < $2` : ''}
       order by p."createdAt" DESC
       limit $1
     `, replacements)
