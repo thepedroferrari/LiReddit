@@ -1,29 +1,31 @@
 import { ApolloServer } from 'apollo-server-express';
 import connectRedis from 'connect-redis';
-import cors from 'cors'
+import cors from 'cors';
+import 'dotenv-safe/config';
 import express from 'express';
 import session from 'express-session';
 import Redis from 'ioredis';
 import 'reflect-metadata';
-import {createConnection} from 'typeorm'
-
-import { __prod__, COOKIE_NAME, ONE_YEAR } from './constants';
 import { buildSchema } from 'type-graphql';
+import { createConnection } from 'typeorm';
+import { COOKIE_NAME, ONE_YEAR, __prod__ } from './constants';
+import { Post } from './entities/Post';
+import { Updoot } from './entities/Updoot';
+import { User } from './entities/User';
 import { HelloResolver } from './resolvers/hello';
 import { PostResolver } from './resolvers/post';
 import { UserResolver } from './resolvers/user';
-import { Post } from './entities/Post';
-import { User } from './entities/User';
-import { Updoot } from './entities/Updoot';
-import { createUserLoader } from './utils/createUserLoader';
 import { createUpdootLoader } from './utils/createUpdootLoader';
+import { createUserLoader } from './utils/createUserLoader';
+
 
 const main = async () => {
   const conn = await createConnection({
     type: 'postgres',
-    database: 'lireddit5',
-    username: 'postgres',
-    password: 'postgres',
+    // database: 'lireddit5',
+    // username: 'postgres',
+    // password: 'postgres',
+    url: process.env.DATABASE_URL,
     logging: true,
     synchronize: true,
     entities: [Post, User, Updoot]
@@ -35,10 +37,10 @@ const main = async () => {
   const app = express();
 
   const RedisStore = connectRedis(session);
-  const redis = new Redis();
+  const redis = new Redis(process.env.REDIS_URL);
 
   app.use(cors({
-    origin: "http://localhost:3000",
+    origin: process.env.CORS_ORIGIN,
     credentials: true
   }))
   app.use(
@@ -52,10 +54,11 @@ const main = async () => {
         maxAge: ONE_YEAR * 10,
         httpOnly: true,
         sameSite: 'lax',
-        secure: __prod__
+        secure: __prod__,
+        domain: __prod__ ? '.pedroferrari.com' : undefined
     },
       saveUninitialized: false,
-      secret: 'isuadhoisdhaoiuadshoiudash',
+      secret: process.env.SESSION_SECRET,
       resave: false,
     })
   )
@@ -79,8 +82,8 @@ const main = async () => {
     cors: false
   });
 
-  app.listen(4000, () => {
-    console.log('server started on http://localhost:4000')
+  app.listen(parseInt(process.env.PORT), () => {
+    console.log(`server started on http://localhost:${process.env.PORT}`)
   })
 };
 
