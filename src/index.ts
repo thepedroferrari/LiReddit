@@ -27,7 +27,7 @@ const main = async () => {
     // password: 'postgres',
     url: process.env.DATABASE_URL,
     logging: true,
-    synchronize: true,
+    synchronize: false,
     entities: [Post, User, Updoot]
   });
   await conn.runMigrations();
@@ -38,7 +38,7 @@ const main = async () => {
 
   const RedisStore = connectRedis(session);
   const redis = new Redis(process.env.REDIS_URL);
-
+  app.set("proxy", 1)
   app.use(cors({
     origin: process.env.CORS_ORIGIN,
     credentials: true

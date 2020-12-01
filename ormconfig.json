@@ -1,13 +1,15 @@
 {
-  "name": "default",
+  "name": "lireddit2",
   "type": "postgres",
   "host": "localhost",
   "port": 5432,
-  "database": "lireddit5",
+  "database": "lireddit2",
   "username": "postgres",
   "password": "postgres",
-  "synchronize": true,
+  "synchronize": false,
   "logging": true,
+  "entities": ["dist/entities/*.{.ts,.js}"],
+  "resolvers": ["dist/resolvers/*.js"],
   "migrations": ["dist/migration/*.js"],
   "cli": {
     "migrationsDir": "src/migration"
