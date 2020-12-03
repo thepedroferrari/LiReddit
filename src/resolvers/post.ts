@@ -136,7 +136,7 @@ export class PostResolver {
     const posts = await getConnection().query(`
       select p.*
       from post p
-      ${cursor ? `where p."createdAt" < $2` : ''}
+      ${cursor ? `where p."createdAt" < $2` : ""}
       order by p."createdAt" DESC
       limit $1
     `, replacements)

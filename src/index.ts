@@ -5,6 +5,7 @@ import 'dotenv-safe/config';
 import express from 'express';
 import session from 'express-session';
 import Redis from 'ioredis';
+import path from "path";
 import 'reflect-metadata';
 import { buildSchema } from 'type-graphql';
 import { createConnection } from 'typeorm';
@@ -18,7 +19,6 @@ import { UserResolver } from './resolvers/user';
 import { createUpdootLoader } from './utils/createUpdootLoader';
 import { createUserLoader } from './utils/createUserLoader';
 
-
 const main = async () => {
   const conn = await createConnection({
     type: 'postgres',
@@ -27,8 +27,9 @@ const main = async () => {
     // password: 'postgres',
     url: process.env.DATABASE_URL,
     logging: true,
-    synchronize: false,
-    entities: [Post, User, Updoot]
+    // synchronize: !__prod__,
+    migrations: [path.join(__dirname, "./migrations/*")],
+    entities: [Post, User, Updoot],
   });
   await conn.runMigrations();
 
