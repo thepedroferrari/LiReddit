@@ -9,7 +9,7 @@ import path from "path";
 import 'reflect-metadata';
 import { buildSchema } from 'type-graphql';
 import { createConnection } from 'typeorm';
-import { COOKIE_NAME, ONE_YEAR, __prod__ } from './constants';
+import { COOKIE_NAME, ONE_DAY, __prod__ } from './constants';
 import { Post } from './entities/Post';
 import { Updoot } from './entities/Updoot';
 import { User } from './entities/User';
@@ -27,8 +27,8 @@ const main = async () => {
     // password: 'postgres',
     url: process.env.DATABASE_URL,
     logging: true,
-    // synchronize: !__prod__,
-    migrations: [path.join(__dirname, "./migrations/*")],
+    synchronize: true,
+    migrations: [path.join(__dirname, "./migration/*")],
     entities: [Post, User, Updoot],
   });
   await conn.runMigrations();
@@ -39,7 +39,7 @@ const main = async () => {
 
   const RedisStore = connectRedis(session);
   const redis = new Redis(process.env.REDIS_URL);
-  app.set("proxy", 1)
+  app.set("trust proxy", 1)
   app.use(cors({
     origin: process.env.CORS_ORIGIN,
     credentials: true
@@ -52,11 +52,12 @@ const main = async () => {
         disableTouch: true
       }),
       cookie: {
-        maxAge: ONE_YEAR * 10,
+        path: "/",
+        maxAge: ONE_DAY * 7,
         httpOnly: true,
         sameSite: 'lax',
-        secure: __prod__,
-        domain: __prod__ ? '.pedroferrari.com' : undefined
+        secure: false, // __prod__,
+        domain: '.pedroferrari.com' // __prod__ ? '.pedroferrari.com' : undefined
     },
       saveUninitialized: false,
       secret: process.env.SESSION_SECRET,

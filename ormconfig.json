@@ -6,7 +6,7 @@
   "database": "lireddit3",
   "username": "postgres",
   "password": "postgres",
-  "synchronize": false,
+  "synchronize": true,
   "logging": true,
   "entities": ["dist/entities/*.{.ts,.js}"],
   "resolvers": ["dist/resolvers/*.js"],
