@@ -214,7 +214,7 @@ export class UserResolver {
     @Ctx() { req }: MyContext
   ) {
     return new Promise(res => {
-      req.session.destroy(err => {
+      req.session.destroy((err: string | undefined) => {
         if (err) {
           console.log(err);
           res(false);
